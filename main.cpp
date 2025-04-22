@@ -17,5 +17,10 @@ int main(int argc, char** argv) {
 	std::cout << funcPrime->Evaluate(10) << "\n";
 	std::cout << funcPrime->Repr() << "\n";
 
+	std::unique_ptr<functools::Function> Func = func->GetPrimitive();
+
+	std::cout << Func->Evaluate(10) << "\n";
+	std::cout << Func->Repr() << "\n";
+
 	return 0;
 }

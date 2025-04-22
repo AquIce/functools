@@ -5,11 +5,12 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
 
-#define DEGREE_TYPE unsigned int
+#define DegreeType char
 #define Type double
 
 namespace functools {
@@ -27,9 +28,11 @@ namespace functools {
 
 	};
 
+	// --- 
 	// Polynomial Functions
+	// ---
 
-	template <DEGREE_TYPE Degree = 0>
+	template <DegreeType Degree = 0>
 	class PolynomialFunction : public Function {
 	
 	public:
@@ -40,9 +43,9 @@ namespace functools {
 			coefficients(coefficients)
 		{}
 
-		virtual Type Evaluate(Type x) override {
+		Type Evaluate(Type x) override {
 			Type result = 0;
-			DEGREE_TYPE currentDegree = Degree;
+			DegreeType currentDegree = Degree;
 
 			for(const auto& coefficient : coefficients) {
 				result += coefficient * std::pow(x, currentDegree--);
@@ -54,20 +57,27 @@ namespace functools {
 
 			std::array<Type, Degree> derivedCoefficients;
 
-			for(DEGREE_TYPE i = 0; i < Degree; i++) {
+			for(DegreeType i = 0; i < Degree; i++) {
 				derivedCoefficients.at(i) = coefficients.at(i) * (Degree - i);
 			}
 
 			return std::make_unique<PolynomialFunction<Degree - 1>>(derivedCoefficients);
 		}
 
-		virtual std::unique_ptr<Function> GetPrimitive() const override {
-			return nullptr;
+		std::unique_ptr<Function> GetPrimitive() const override {
+
+			std::array<Type, Degree + 2> primitiveCoefficients;
+
+			for(DegreeType i = 0; i <= Degree; i++) {
+				primitiveCoefficients.at(i) = coefficients.at(i) / (Degree - i + 1);
+			}
+
+			return std::make_unique<PolynomialFunction<Degree + 1>>(primitiveCoefficients);
 		}
 
-		virtual std::string Repr() const override {
+		std::string Repr() const override {
 			std::string repr = "";
-			DEGREE_TYPE currentDegree = Degree;
+			DegreeType currentDegree = Degree;
 			for(const auto& coefficient : coefficients) {
 				
 				if(coefficient == 0) {
@@ -105,45 +115,37 @@ namespace functools {
 		std::array<Type, Degree + 1> coefficients;
 	};
 
+	// For Degree = 0
+
 	template <>
-	class PolynomialFunction<0> : public Function {
+	Type PolynomialFunction<0>::Evaluate(Type x) {
+		return coefficients.at(0);
+	}
 
-	public:
+	template <>
+	std::unique_ptr<Function> PolynomialFunction<0>::GetDerivative() const {
+		return std::make_unique<PolynomialFunction<0>>(
+			std::array<Type, 1>({
+				static_cast<Type>(0)
+			})
+		);
+	}
 
-		PolynomialFunction(
-			const std::array<Type, 1>& coefficients
-		) :
-			coefficients(coefficients)
-		{}
+	template <>
+	std::string PolynomialFunction<0>::Repr() const {
+		return std::to_string(coefficients.at(0));
+	}
 
-		Type Evaluate(Type x) override {
-			return coefficients.at(0);
-		}
+	// For Degree = std::numeric_limits<DegreeType>::max()
 
-		std::unique_ptr<Function> GetDerivative() const override {
-			return std::make_unique<PolynomialFunction<0>>(
-				std::array<Type, 1>({
-					static_cast<Type>(0)
-				})
-			);
-		}
+	template <>
+	std::unique_ptr<Function> PolynomialFunction<std::numeric_limits<DegreeType>::max()>::GetPrimitive() const {
+		throw std::runtime_error("Exceeded maximum allowable degree for polynomial functions.");
+	}
 
-		std::unique_ptr<Function> GetPrimitive() const override {
-			return nullptr;
-		}
-
-		std::string Repr() const override {
-			std::string repr = "";
-			repr += std::to_string(coefficients.at(0));
-			return repr;
-		}
-
-	private:
-		std::array<Type, 1> coefficients;
-	};
-
-
+	// --- 
 	// Trigonometry Functions
+	// ---
 
 	enum class TrigonometryFunctionType {
 		SIN,
