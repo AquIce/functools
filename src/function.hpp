@@ -153,4 +153,38 @@ namespace functools {
 		TAN,
 		COT
 	};
+	
+	class TrigonometryFunction : public Function {
+	
+	public:
+
+		TrigonometryFunction(
+			const TrigonometryFunctionType type,
+			std::unique_ptr<Function> inner
+		) :
+			type(type),
+			inner(inner)
+		{}
+
+		Type Evaluate(Type x) override {
+
+		}
+
+		std::unique_ptr<Function> GetDerivative() const override {
+
+		}
+
+		std::unique_ptr<Function> GetPrimitive() const override {
+
+		}
+
+		std::string Repr() const override {
+
+		}
+
+	private:
+		TrigonometryFunctionType type;
+		std::unique_ptr<Function> inner;
+	};
+
 }
