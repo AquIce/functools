@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 		)
 	);
 
-	func2 + func;
+	func = func2 + func;
 
 	// auto func = std::make_shared<functools::PolynomialFunction<3>>(
 	// 	std::array<std::shared_ptr<functools::Function>, 4>({

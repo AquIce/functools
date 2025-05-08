@@ -5,13 +5,13 @@
 #include <memory>
 
 template<typename T, size_t S>
-std::array<std::shared_ptr<T>, S> operator+(
-	const std::array<std::shared_ptr<T>, S>& lhs,
-	const std::array<std::shared_ptr<T>, S>& rhs
+std::array<T, S> operator+(
+	const std::array<T, S>& lhs,
+	const std::array<T, S>& rhs
 ) {
-	std::array<std::shared_ptr<T>, S> result;
+	std::array<T, S> result;
 	for(size_t i = 0; i < S; i++) {
-		result.at(i) = *(lhs.at(i).get()) + rhs.at(i);
+		result.at(i) = lhs.at(i).get() + rhs.at(i);
 	}
 	return result;
 }
