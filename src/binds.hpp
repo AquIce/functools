@@ -1,17 +1,16 @@
 #pragma once
 
-#include <array>
 #include <cstdlib>
-#include <memory>
+#include <vector>
 
-template<typename T, size_t S>
-std::array<T, S> operator+(
-	const std::array<T, S>& lhs,
-	const std::array<T, S>& rhs
+template<typename T>
+std::vector<T> operator+(
+	const std::vector<T>& lhs,
+	const std::vector<T>& rhs
 ) {
-	std::array<T, S> result;
-	for(size_t i = 0; i < S; i++) {
-		result.at(i) = lhs.at(i).get() + rhs.at(i);
+	std::vector<T> result;
+	for(size_t i = 0; i < lhs.size(); i++) {
+		result.push_back(lhs.at(i) + rhs.at(i));
 	}
 	return result;
 }
