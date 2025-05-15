@@ -15,15 +15,18 @@ int main(int argc, char** argv) {
 	);
 
 	auto func2 = std::make_shared<functools::PolynomialFunction>(
-		3,
+		1,
 		functools::Upcast<functools::ConstantFunction>(
 			functools::CoeffsToConstFunctions(
-				std::vector<Type>({2, 1, 0, -1})
+				std::vector<Type>({1, 1})
 			)
 		)
 	);
 
-	func = func2 + func;
+	std::cout << func->Repr() << "\n";
+	std::cout << func2->Repr() << "\n";
+
+	func = func2 * func;
 
 	std::cout << func->Evaluate(10) << "\n";
 	std::cout << func->Repr() << "\n";

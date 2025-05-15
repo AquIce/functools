@@ -59,7 +59,7 @@ namespace functools {
 		Type GetValue();
 	
 	private:
-		Type value;
+		Type m_value;
 	};
 
 	class PolynomialFunction : public Function {
@@ -86,8 +86,8 @@ namespace functools {
 		std::vector<std::shared_ptr<Function>> GetCoefficients();
 
 	private:
-		const DegreeType degree;
-		std::vector<std::shared_ptr<Function>> coefficients;
+		const DegreeType m_degree;
+		std::vector<std::shared_ptr<Function>> m_coefficients;
 	};
 }
 
@@ -100,6 +100,15 @@ std::shared_ptr<functools::Function> operator+(
 	std::shared_ptr<functools::Function> rhs
 );
 std::shared_ptr<functools::Function> operator+(
+	std::shared_ptr<functools::Function> lhs,
+	Type rhs
+);
+
+std::shared_ptr<functools::Function> operator*(
+	std::shared_ptr<functools::Function> lhs,
+	std::shared_ptr<functools::Function> rhs
+);
+std::shared_ptr<functools::Function> operator*(
 	std::shared_ptr<functools::Function> lhs,
 	Type rhs
 );
@@ -151,11 +160,11 @@ namespace functools {
 
 	ConstantFunction::ConstantFunction(Type value) :
 		Function(),
-		value(value)
+		m_value(value)
 	{}
 
 	Type ConstantFunction::Evaluate(Type x) {
-		return value;
+		return m_value;
 	}
 
 	std::shared_ptr<Function> ConstantFunction::GetDerivative() const {
@@ -167,14 +176,14 @@ namespace functools {
 			1,
 			functools::Upcast<functools::ConstantFunction>(
 				CoeffsToConstFunctions(
-					std::vector<Type>({ value, 0 })
+					std::vector<Type>({ m_value, 0 })
 				)
 			)
 		);
 	}
 
 	std::string ConstantFunction::Repr() const {
-		return std::to_string(value);
+		return std::to_string(m_value);
 	}
 
 	FunctionType ConstantFunction::GetType() const {
@@ -182,7 +191,7 @@ namespace functools {
 	}
 
 	Type ConstantFunction::GetValue() {
-		return value;
+		return m_value;
 	}
 
 	// --- 
@@ -194,19 +203,19 @@ namespace functools {
 		std::vector<std::shared_ptr<Function>> coefficients
 	) :
 		Function(),
-		degree(degree),
-		coefficients(coefficients)
+		m_degree(degree),
+		m_coefficients(coefficients)
 	{
-		if(degree != coefficients.size() - 1) {
+		if(m_degree != m_coefficients.size() - 1) {
 			throw std::runtime_error("Invalid polynomial degree.");
 		}
 	}
 
 	Type PolynomialFunction::Evaluate(Type x) {
 		Type result = 0;
-		DegreeType currentDegree = degree;
+		DegreeType currentDegree = m_degree;
 
-		for(const auto& coefficient : coefficients) {
+		for(const auto& coefficient : m_coefficients) {
 			result += coefficient->Evaluate(x) * std::pow(x, currentDegree--);
 		}
 		return result;
@@ -240,8 +249,8 @@ namespace functools {
 	std::string PolynomialFunction::Repr() const {
 
 		std::string repr = "";
-		DegreeType currentDegree = degree;
-		for(const auto& coefficient : coefficients) {
+		DegreeType currentDegree = m_degree;
+		for(const auto& coefficient : m_coefficients) {
 
 			std::string xForm = "x^" + std::to_string(currentDegree);
 			
@@ -252,7 +261,7 @@ namespace functools {
 			}
 
 			repr +=
-				std::string(currentDegree != degree ? "+ " : "")
+				std::string(currentDegree != m_degree ? "+ " : "")
 				+ "(" + coefficient->Repr() + ") " + xForm
 				+ std::string(currentDegree != 0 ? " " : ""); 
 
@@ -267,11 +276,11 @@ namespace functools {
 	}
 
 	DegreeType PolynomialFunction::GetDegree() {
-		return degree;
+		return m_degree;
 	}
 
 	std::vector<std::shared_ptr<Function>> PolynomialFunction::GetCoefficients() {
-		return coefficients;
+		return m_coefficients;
 	}
 
 	// --- 
@@ -363,8 +372,124 @@ namespace functools {
 }
 
 // ---
+// Operators Prototypes
+// ---
+
+// +
+
+std::shared_ptr<functools::ConstantFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ConstantFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+
+// -
+
+std::shared_ptr<functools::ConstantFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ConstantFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+
+// *
+
+std::shared_ptr<functools::ConstantFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ConstantFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+
+// /
+
+std::shared_ptr<functools::ConstantFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ConstantFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+// Makes no sense
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+// Change return type (P(X) = D(X)Q(X) + R(X))
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+
+// ---
 // Operators
 // ---
+
+// +
 
 std::shared_ptr<functools::ConstantFunction> operator+(
 	std::shared_ptr<functools::ConstantFunction> lhs,
@@ -460,6 +585,165 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 	);
 }
 
+// -
+
+std::shared_ptr<functools::ConstantFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+) {
+	return lhs + (-rhs);
+}
+std::shared_ptr<functools::ConstantFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+) {
+	return lhs + (-rhs);
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+
+// *
+
+std::shared_ptr<functools::ConstantFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+){
+	return std::make_shared<functools::ConstantFunction>(
+		lhs->GetValue() * rhs
+	);	
+}
+std::shared_ptr<functools::ConstantFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+){
+	return std::make_shared<functools::ConstantFunction>(
+		lhs->GetValue() * rhs->GetValue()
+	);
+}
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+){
+	std::vector<std::shared_ptr<functools::Function>> res;
+	for(auto func : rhs->GetCoefficients()) {
+		res.push_back(func * lhs);
+	}
+	return std::make_shared<functools::PolynomialFunction>(
+		rhs->GetDegree(),
+		res
+	);
+}
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+){
+	std::vector<std::shared_ptr<functools::Function>> res;
+	for(auto func : lhs->GetCoefficients()) {
+		res.push_back(func * rhs);
+	}
+	return std::make_shared<functools::PolynomialFunction>(
+		lhs->GetDegree(),
+		res
+	);
+}
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+){
+	return rhs * lhs;
+}
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+){
+	std::vector<std::shared_ptr<functools::Function>> res;
+	for(uint8_t i = 0; i < lhs->GetDegree() + rhs->GetDegree() + 1; i++) {
+		res.push_back(
+			std::make_shared<functools::ConstantFunction>(0)
+		);
+	}
+	std::vector<std::shared_ptr<functools::Function>> lhsCoeffs = lhs->GetCoefficients();
+	std::vector<std::shared_ptr<functools::Function>> rhsCoeffs = rhs->GetCoefficients();
+
+	for(DegreeType i = 0; i < lhsCoeffs.size(); i++) {
+		for(DegreeType j = 0; j < rhsCoeffs.size(); j++) {
+			res.at(i + j) = res.at(i + j) + lhsCoeffs.at(i) * rhsCoeffs.at(j);
+		}
+	}
+
+	return std::make_shared<functools::PolynomialFunction>(
+		lhs->GetDegree() + rhs->GetDegree(),
+		res
+	);
+}
+
+// /
+
+std::shared_ptr<functools::ConstantFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	Type rhs
+){
+	NOIMP;
+}
+std::shared_ptr<functools::ConstantFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+){
+	NOIMP;
+}
+// Makes no sense
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+){
+	NOIMP;
+}
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	Type rhs
+){
+	NOIMP;
+}
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+){
+	NOIMP;
+}
+// Change return type (P(X) = D(X)Q(X) + R(X))
+std::shared_ptr<functools::PolynomialFunction> operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+){
+	NOIMP;
+}
+
+// ---
+// General
+// ---
+
 std::shared_ptr<functools::Function> operator+(
 	std::shared_ptr<functools::Function> lhs,
 	std::shared_ptr<functools::Function> rhs
@@ -493,6 +777,44 @@ std::shared_ptr<functools::Function> operator+(
 	}
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		return lhsCast + rhs;
+	}
+
+	throw std::runtime_error("Invalid function");
+}
+
+std::shared_ptr<functools::Function> operator*(
+	std::shared_ptr<functools::Function> lhs,
+	std::shared_ptr<functools::Function> rhs
+) {
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+	}
+	
+	throw std::runtime_error("Invalid function");
+}
+
+std::shared_ptr<functools::Function> operator*(
+	std::shared_ptr<functools::Function> lhs,
+	Type rhs
+) {
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(lhs)) {
+		return lhsCast * rhs;
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
+		return lhsCast * rhs;
 	}
 
 	throw std::runtime_error("Invalid function");
