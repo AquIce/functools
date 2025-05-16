@@ -6,10 +6,10 @@
 int main(int argc, char** argv) {
 	
 	auto func = std::make_shared<functools::PolynomialFunction>(
-		4,
+		2,
 		functools::Upcast<functools::ConstantFunction>(
 			functools::CoeffsToConstFunctions(
-				std::vector<Type>({5, 4, 3, 2, 1})
+				std::vector<Type>({1, 0, -1})
 			)
 		)
 	);
@@ -26,20 +26,13 @@ int main(int argc, char** argv) {
 	std::cout << func->Repr() << "\n";
 	std::cout << func2->Repr() << "\n";
 
-	func = func2 * func;
+	functools::DivisionResult res = func / func2;
 
-	std::cout << func->Evaluate(10) << "\n";
-	std::cout << func->Repr() << "\n";
+	std::cout << "Quotient: " << "\n";
+	std::cout << res.Quotient->Repr() << "\n";
 
-	/*std::unique_ptr<functools::Function> funcPrime = func->GetDerivative();
+	std::cout << "Remainder: " << "\n";
+	std::cout << res.Remainder->Repr() << "\n";
 
-	std::cout << funcPrime->Evaluate(10) << "\n";
-	std::cout << funcPrime->Repr() << "\n";
-
-	std::unique_ptr<functools::Function> Func = func->GetPrimitive();
-
-	std::cout << Func->Evaluate(10) << "\n";
-	std::cout << Func->Repr() << "\n";
-*/
 	return 0;
 }
