@@ -327,15 +327,32 @@ namespace functools {
 	}
 
 	std::shared_ptr<Function> PolynomialFunction::GetPrimitive() const {
-		NOIMP;
+		auto primitive = std::make_shared<PolynomialFunction>();
 
-		// std::array<Type, Degree + 2> primitiveCoefficients;
+		for(DegreeType i = 0; i < m_degree + 1; i++) {
+			if(auto coefficientCast = std::dynamic_pointer_cast<ConstantFunction>(m_coefficients.at(i))) {
+				primitive = std::dynamic_pointer_cast<PolynomialFunction>(
+					primitive + (
+						(m_coefficients.at(i) / (m_degree - i + 1)).Quotient * XPowerN(m_degree - i + 1)
+					)
+				);
+				continue;
+			}
 
-		// for(DegreeType i = 0; i <= Degree; i++) {
-		// 	primitiveCoefficients.at(i) = coefficients.at(i) / (Degree - i + 1);
-		// }
+			if(auto coefficientCast = std::dynamic_pointer_cast<PolynomialFunction>(m_coefficients.at(i))) {
+				primitive = std::dynamic_pointer_cast<PolynomialFunction>(
+					primitive + (
+						m_coefficients.at(i) * XPowerN(m_degree - i)
+					)->GetPrimitive()
+				);
+				continue;
+			} 
 
-		// return std::make_shared<PolynomialFunction<Degree + 1>>(primitiveCoefficients);
+			// Use integration by parts
+			NOIMP;
+		}
+
+		return primitive;
 	}
 
 	std::string PolynomialFunction::Repr() const {
