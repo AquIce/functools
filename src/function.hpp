@@ -161,11 +161,11 @@ namespace functools {
 	}
 
 	std::shared_ptr<PolynomialFunction> Simplify(
-		std::shared_ptr<functools::PolynomialFunction> func
+		std::shared_ptr<PolynomialFunction> func
 	) {
 		DegreeType i = 0;
-		std::vector<std::shared_ptr<functools::Function>> coeffs = func->GetCoefficients();
-		std::vector<std::shared_ptr<functools::Function>> res;
+		std::vector<std::shared_ptr<Function>> coeffs = func->GetCoefficients();
+		std::vector<std::shared_ptr<Function>> res;
 		while(i < coeffs.size() && coeffs.at(i)->isZero()) {
 			i++;
 		}
@@ -174,14 +174,27 @@ namespace functools {
 		}
 		if(res.size() == 0) {
 			res.push_back(
-				std::make_shared<functools::ConstantFunction>(0)
+				std::make_shared<ConstantFunction>(0)
 			);
 		}
-		return std::make_shared<functools::PolynomialFunction>(
+		return std::make_shared<PolynomialFunction>(
 			res.size() - 1,
 			res
 		);
 	}
+
+	std::shared_ptr<PolynomialFunction> XPowerN(Type n) {
+		auto res = std::vector<std::shared_ptr<Function>>(
+			n + 1,
+			std::dynamic_pointer_cast<Function>(
+				std::make_shared<ConstantFunction>(0)
+			)
+		);
+		res.at(0) = std::dynamic_pointer_cast<Function>(
+			std::make_shared<ConstantFunction>(1)
+		);
+		return std::make_shared<PolynomialFunction>(n, res);
+ 	}
 
 	// ---
 	// General Function
@@ -292,16 +305,26 @@ namespace functools {
 
 	// Add inner derivative
 	std::shared_ptr<Function> PolynomialFunction::GetDerivative() const {
-		NOIMP;
+		auto derivative = std::make_shared<PolynomialFunction>();
 
-		/*std::array<std::shared_ptr<Function>, Degree> derivedCoefficients;
+		for(DegreeType i = 0; i < m_degree; i++) {
+			if(auto coefficientCast = std::dynamic_pointer_cast<ConstantFunction>(m_coefficients.at(i))) {
+				derivative = std::dynamic_pointer_cast<PolynomialFunction>(
+					derivative + (m_coefficients.at(i) * (m_degree - i) * XPowerN(m_degree - i - 1))
+				);
+				continue;
+			}
 
-		for(DegreeType i = 0; i < Degree; i++) {
-			derivedCoefficients.at(i) = coefficients.at(i) * (Degree - i);
+			derivative = std::dynamic_pointer_cast<PolynomialFunction>(
+				derivative + (
+					(XPowerN(m_degree - i) * m_coefficients.at(i)->GetDerivative()) +
+					(XPowerN(m_degree - i - 1) * m_coefficients.at(i))
+				)
+			);
 		}
 
-		return std::make_shared<PolynomialFunction<Degree - 1>>(derivedCoefficients);
-*/		}
+		return derivative;
+	}
 
 	std::shared_ptr<Function> PolynomialFunction::GetPrimitive() const {
 		NOIMP;
