@@ -23,6 +23,15 @@ namespace functools {
 		TRIGONOMETRY
 	};
 
+	enum class TrigonometryFunctionType {
+		SIN = 0,
+		COS,
+		TAN,
+		SINH,
+		COSH,
+		TANH
+	};
+
 	// ---
 	// Prototypes
 	// ---
@@ -95,6 +104,32 @@ namespace functools {
 	private:
 		const DegreeType m_degree;
 		std::vector<std::shared_ptr<Function>> m_coefficients;
+	};
+
+	class TrigonometryFunction : public Function {
+	
+	public:
+
+		TrigonometryFunction(
+			const TrigonometryFunctionType type,
+			std::shared_ptr<Function> inner
+		);
+
+		Type Evaluate(Type x) override;
+
+		std::shared_ptr<Function> GetDerivative() const override;
+
+		std::shared_ptr<Function> GetPrimitive() const override;
+
+		std::string Repr() const override;
+
+		FunctionType GetType() const override;
+
+		bool isZero() const override;
+
+	private:
+		TrigonometryFunctionType m_type;
+		std::shared_ptr<Function> m_inner;
 	};
 
 	struct DivisionResult {
@@ -348,7 +383,7 @@ namespace functools {
 				continue;
 			} 
 
-			// Use integration by parts
+			// TODO Use integration by parts
 			NOIMP;
 		}
 
@@ -404,89 +439,127 @@ namespace functools {
 	// --- 
 	// Trigonometry Functions
 	// ---
-
-	// enum class TrigonometryFunctionType {
-	// 	SIN,
-	// 	COS,
-	// 	TAN,
-	// 	SINH,
-	// 	COSH,
-	// 	TANH
-	// };
 	
-	// class TrigonometryFunction : public Function {
-	
-	// public:
+	TrigonometryFunction::TrigonometryFunction(
+		const TrigonometryFunctionType type,
+		std::shared_ptr<Function> inner
+	) :
+		m_type(type),
+		m_inner(inner)
+	{}
 
-	// 	TrigonometryFunction(
-	// 		Type coefficient,
-	// 		const TrigonometryFunctionType type,
-	// 		std::shared_ptr<Function> inner
-	// 	) :
-	// 		coefficient(coefficient),
-	// 		type(type),
-	// 		inner(inner)
-	// 	{}
+	Type TrigonometryFunction::Evaluate(Type x) {
+		switch(m_type) {
+			case TrigonometryFunctionType::SIN:
+				return static_cast<Type>(std::sin(x));
+			case TrigonometryFunctionType::COS:
+				return static_cast<Type>(std::cos(x));
+			case TrigonometryFunctionType::TAN:
+				return static_cast<Type>(std::tan(x));
+			case TrigonometryFunctionType::SINH:
+				return static_cast<Type>(std::sinh(x));
+			case TrigonometryFunctionType::COSH:
+				return static_cast<Type>(std::cosh(x));
+			case TrigonometryFunctionType::TANH:
+				return static_cast<Type>(std::tanh(x));
+			default:
+				throw std::runtime_error("Invalid trigonometry operation");
+		}
+	}
 
-	// 	Type Evaluate(Type x) override {
-	// 		switch(type) {
-	// 			case TrigonometryFunctionType::SIN:
-	// 				return static_cast<Type>(std::sin(x));
-	// 			case TrigonometryFunctionType::COS:
-	// 				return static_cast<Type>(std::cos(x));
-	// 			case TrigonometryFunctionType::TAN:
-	// 				return static_cast<Type>(std::tan(x));
-	// 			case TrigonometryFunctionType::SINH:
-	// 				return static_cast<Type>(std::sinh(x));
-	// 			case TrigonometryFunctionType::COSH:
-	// 				return static_cast<Type>(std::cosh(x));
-	// 			case TrigonometryFunctionType::TANH:
-	// 				return static_cast<Type>(std::tanh(x));
-	// 			default:
-	// 				throw std::runtime_error("Invalid trigonometry operation");
-	// 		}
-	// 	}
+	std::shared_ptr<Function> TrigonometryFunction::GetDerivative() const {
+		switch(m_type) {
+			case TrigonometryFunctionType::SIN: {
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::COS,
+						inner
+					) * inner->GetDerivative()
+				);
+			}
+			case TrigonometryFunctionType::COS {
+				return (
+					(-1) * std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::SIN,
+						inner
+					) * inner->GetDerivative()
+				);
+			}
+			case TrigonometryFunctionType::TAN:
+				NOIMP;
+			case TrigonometryFunctionType::SINH:
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::COSH,
+						inner
+					) * inner->GetDerivative()
+				);
+			case TrigonometryFunctionType::COSH:
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::SINH,
+						inner
+					) * inner->GetDerivative()
+				);
+			case TrigonometryFunctionType::TANH:
+				NOIMP;
+			default:
+				NOIMP;
+		}
+	}
 
-	// 	// TODO : Add internal derivative
-	// 	std::shared_ptr<Function> GetDerivative() const override {
-	// 		switch(type) {
-	// 			case TrigonometryFunctionType::SIN:
-	// 				return std::make_shared<TrigonometryFunction>(
-	// 					1,
-	// 					TrigonometryFunctionType::COS
-	// 				);
-	// 			case TrigonometryFunctionType::COS:
-	// 				return std::make_shared<TrigonometryFunction>(
-	// 					- coefficient / std::abs(coefficient),
-	// 					TrigonometryFunctionType::SIN
-	// 				);
-	// 			case TrigonometryFunctionType::TAN:
-	// 				NOIMP;
-	// 			case TrigonometryFunctionType::SINH:
-	// 				NOIMP;
-	// 			case TrigonometryFunctionType::COSH:
-	// 				NOIMP;
-	// 			case TrigonometryFunctionType::TANH:
-	// 				NOIMP;
-	// 			default:
-	// 				NOIMP;
-	// 		}
-	// 	}
+	std::shared_ptr<Function> TrigonometryFunction::GetPrimitive() const {
+		NOIMP;
+	}
 
-	// 	std::shared_ptr<Function> GetPrimitive() const override;
+	std::string TrigonometryFunction::Repr() const {
+		std::string name =
+			m_type == TrigonometryFunctionType::SIN ?
+				"sin":
+			m_type == TrigonometryFunctionType::COS ?
+				"cos":
+			m_type == TrigonometryFunctionType::TAN ?
+				"tan":
+			m_type == TrigonometryFunctionType::SINH ?
+				"sinh":
+			m_type == TrigonometryFunctionType::COSH ?
+				"cosh":
+				"tanh";
 
-	// 	std::string Repr() const override;
+		return name + "(" + m_inner->Repr() + ")";
+	}
 
-	// 	FunctionType GetType() const override {
-	// 		return FunctionType::TRIGONOMETRY;
-	// 	}
+	FunctionType TrigonometryFunction::GetType() const {
+		return FunctionType::TRIGONOMETRY;
+	}
 
-	// private:
-	// 	Type coefficient;
-	// 	TrigonometryFunctionType type;
-	// 	std::shared_ptr<Function> inner;
-	// };
-
+	bool TrigonometryFunction::isZero() const {
+		if(auto innerCast = std::dynamic_pointer_cast<ConstantFunction>(m_inner)) {
+			switch(m_type) {
+				case TrigonometryFunctionType::SIN: {
+					return std::fmod(innerCast->GetValue(), 2 * M_PI) == 0;	
+				}
+				case TrigonometryFunctionType::COS: {
+					return std::fmod(innerCast->GetValue(), 2 * M_PI) == M_PI;	
+				}
+				case TrigonometryFunctionType::TAN: {
+					return std::fmod(innerCast->GetValue(), 2 * M_PI) == 0;	
+				}
+				case TrigonometryFunctionType::SINH: {
+					return innerCast->GetValue() == 0;	
+				}
+				case TrigonometryFunctionType::COSH: {
+					return false;	
+				}
+				case TrigonometryFunctionType::TANH: {
+					return innerCast->GetValue() == 0;	
+				}
+				default:
+					throw std::runtime_error("Invalid function");
+			}
+		}
+		return false;
+	}
 }
 
 // ---
