@@ -1,3 +1,11 @@
+/*
+ * TODO :
+ * - Add operators to ComplexFunction (from -)
+ * - Replace PowerN with ComplexFunction
+ * - Switch general operators to have macro definition (reduces drastically the number of lines)
+ * - Add comparison checks to functions (for ComplexFunction::isZero())
+*/
+
 #pragma once
 
 #include "debug.hpp"
@@ -20,16 +28,31 @@ namespace functools {
 		NONE = 0,
 		CONSTANT,
 		POLYNOMIAL,
-		TRIGONOMETRY
+		TRIGONOMETRY,
+		COMPLEX
+	};
+
+	enum class FunctionOperator {
+		PLUS,
+		MINUS,
+		TIMES,
+		DIVIDED,
+		POWER
 	};
 
 	enum class TrigonometryFunctionType {
 		SIN = 0,
+		CSC,
 		COS,
+		SEC,
 		TAN,
+		COT,
 		SINH,
+		CSCH,
 		COSH,
-		TANH
+		SECH,
+		TANH,
+		COTH
 	};
 
 	// ---
@@ -132,6 +155,34 @@ namespace functools {
 		std::shared_ptr<Function> m_inner;
 	};
 
+	class ComplexFunction : public Function {
+
+	public:
+
+		ComplexFunction(
+			std::shared_ptr<Function> lhs,
+			const FunctionOperator op,
+			std::shared_ptr<Function> rhs
+		);
+
+		Type Evaluate(Type x) override;
+
+		std::shared_ptr<Function> GetDerivative() const override;
+
+		std::shared_ptr<Function> GetPrimitive() const override;
+
+		std::string Repr() const override;
+
+		FunctionType GetType() const override;
+
+		bool isZero() const override;
+
+	private:
+		std::shared_ptr<Function> m_lhs;		
+		std::shared_ptr<Function> m_rhs;
+		FunctionOperator op;		
+	};
+
 	struct DivisionResult {
 		std::shared_ptr<functools::Function> Quotient;
 		std::shared_ptr<functools::Function> Remainder;
@@ -176,6 +227,11 @@ struct functools::DivisionResult operator/(
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::Function> lhs,
 	Type rhs
+);
+
+std::shared_ptr<functools::Function> PowerN(
+	std::shared_ptr<functools::Function> func,
+	Type exponent
 );
 
 #include "binds.hpp"
@@ -452,16 +508,28 @@ namespace functools {
 		switch(m_type) {
 			case TrigonometryFunctionType::SIN:
 				return static_cast<Type>(std::sin(x));
+			case TrigonometryFunctionType::CSC:
+				return static_cast<Type>(1 / std::sin(x));
 			case TrigonometryFunctionType::COS:
 				return static_cast<Type>(std::cos(x));
+			case TrigonometryFunctionType::SEC:
+				return static_cast<Type>(1 / std::cos(x));
 			case TrigonometryFunctionType::TAN:
 				return static_cast<Type>(std::tan(x));
+			case TrigonometryFunctionType::COT:
+				return static_cast<Type>(1 / std::tan(x));
 			case TrigonometryFunctionType::SINH:
 				return static_cast<Type>(std::sinh(x));
+			case TrigonometryFunctionType::CSCH:
+				return static_cast<Type>(1 / std::sinh(x));
 			case TrigonometryFunctionType::COSH:
 				return static_cast<Type>(std::cosh(x));
+			case TrigonometryFunctionType::SECH:
+				return static_cast<Type>(1 / std::cosh(x));
 			case TrigonometryFunctionType::TANH:
 				return static_cast<Type>(std::tanh(x));
+			case TrigonometryFunctionType::COTH:
+				return static_cast<Type>(1 / std::tanh(x));
 			default:
 				throw std::runtime_error("Invalid trigonometry operation");
 		}
@@ -473,38 +541,120 @@ namespace functools {
 				return (
 					std::make_shared<functools::TrigonometryFunction>(
 						functools::TrigonometryFunctionType::COS,
-						inner
-					) * inner->GetDerivative()
+						m_inner
+					) * m_inner->GetDerivative()
 				);
 			}
-			case TrigonometryFunctionType::COS {
+			case TrigonometryFunctionType::CSC: {
 				return (
-					(-1) * std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::SIN,
-						inner
-					) * inner->GetDerivative()
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::CSC,
+						m_inner
+					) * std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::COT,
+						m_inner
+					) * m_inner->GetDerivative() * (-1)
 				);
 			}
-			case TrigonometryFunctionType::TAN:
-				NOIMP;
+			case TrigonometryFunctionType::COS: {
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::SIN,
+						m_inner
+					) * m_inner->GetDerivative() * (-1)
+				);
+			}
+			case TrigonometryFunctionType::SEC: {
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::SEC,
+						m_inner
+					) * std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::TAN,
+						m_inner
+					) * m_inner->GetDerivative()
+				);
+			}
+			case TrigonometryFunctionType::TAN: {
+				return (
+					PowerN(
+						std::make_shared<functools::TrigonometryFunction>(
+							functools::TrigonometryFunctionType::SEC,
+							m_inner
+						),
+						2
+					) * m_inner->GetDerivative()
+				);
+			}
+			case TrigonometryFunctionType::COT: {
+				return (
+					PowerN(
+						std::make_shared<functools::TrigonometryFunction>(
+							functools::TrigonometryFunctionType::CSC,
+							m_inner
+						),
+						2
+					) * m_inner->GetDerivative() * (-1)
+				);
+			}
 			case TrigonometryFunctionType::SINH:
 				return (
 					std::make_shared<functools::TrigonometryFunction>(
 						functools::TrigonometryFunctionType::COSH,
-						inner
-					) * inner->GetDerivative()
+						m_inner
+					) * m_inner->GetDerivative()
+				);
+			case TrigonometryFunctionType::CSCH:
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::CSCH,
+						m_inner
+					) *
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::TANH,
+						m_inner
+					) * m_inner->GetDerivative() * (-1)
 				);
 			case TrigonometryFunctionType::COSH:
 				return (
 					std::make_shared<functools::TrigonometryFunction>(
 						functools::TrigonometryFunctionType::SINH,
-						inner
-					) * inner->GetDerivative()
+						m_inner
+					) * m_inner->GetDerivative()
+				);
+			case TrigonometryFunctionType::SECH:
+				return (
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::SECH,
+						m_inner
+					) *
+					std::make_shared<functools::TrigonometryFunction>(
+						functools::TrigonometryFunctionType::TANH,
+						m_inner
+					) * m_inner->GetDerivative() * (-1)
 				);
 			case TrigonometryFunctionType::TANH:
-				NOIMP;
+				return (
+					PowerN(
+						std::make_shared<functools::TrigonometryFunction>(
+							functools::TrigonometryFunctionType::SECH,
+							m_inner
+						),
+						2
+					) * m_inner->GetDerivative()
+				);
+			case TrigonometryFunctionType::COTH:
+				return (
+					PowerN(
+						std::make_shared<functools::TrigonometryFunction>(
+							functools::TrigonometryFunctionType::COSH,
+							m_inner
+						),
+						2
+					) * m_inner->GetDerivative() * (-1)
+				);
 			default:
-				NOIMP;
+				throw std::runtime_error("Invalid function : " + this->Repr());
 		}
 	}
 
@@ -555,10 +705,103 @@ namespace functools {
 					return innerCast->GetValue() == 0;	
 				}
 				default:
-					throw std::runtime_error("Invalid function");
+					throw std::runtime_error("Invalid function : " + this->Repr());
 			}
 		}
 		return false;
+	}
+
+	// --- 
+	// Complex Functions
+	// ---
+	
+	ComplexFunction::ComplexFunction(
+		std::shared_ptr<Function> lhs,
+		const FunctionOperator op,
+		std::shared_ptr<Function> rhs
+	) :
+		m_lhs(lhs),
+		m_op(op),
+		m_rhs(rhs)
+	{}
+
+	Type ComplexFunction::Evaluate(Type x) {
+		switch(m_op) {
+			case FunctionOperator::PLUS:
+				return m_lhs->Evaluate(x) + m_rhs->Evaluate(x);
+			case FunctionOperator::MINUS:
+				return m_lhs->Evaluate(x) + m_rhs->Evaluate(x);
+			case FunctionOperator::TIMES:
+				return m_lhs->Evaluate(x) + m_rhs->Evaluate(x);
+			case FunctionOperator::DIVIDED:
+				return m_lhs->Evaluate(x) + m_rhs->Evaluate(x);
+			case FunctionOperator::POWER:
+				return std::pow(m_lhs->Evaluate(x), m_rhs->Evaluate(x));
+			default:
+				throw std::runtime_error("Invalid operator");
+		}
+	}
+
+	std::shared_ptr<Function> ComplexFunction::GetDerivative() const {
+		switch(m_op) {
+			case FunctionOperator::PLUS:
+				return m_lhs->GetDerivative() + m_rhs->GetDerivative();
+			case FunctionOperator::MINUS:
+				return m_lhs->GetDerivative() - m_rhs->GetDerivative();
+			case FunctionOperator::TIMES:
+				return m_lhs->GetDerivative() * m_rhs + m_rhs->GetDerivative() * m_lhs;
+			case FunctionOperator::DIVIDED:
+				return m_lhs->GetDerivative() * m_rhs - m_rhs->GetDerivative() * m_lhs;
+			case FunctionOperator::POWER:
+				return m_rhs * std::make_shared<ComplexFunction>(
+					m_lhs, m_op, m_rhs - 1
+				) * m_rhs->GetDerivative();
+			default:
+				throw std::runtime_error("Invalid operator");
+		}
+	}
+
+	std::shared_ptr<Function> ComplexFunction::GetPrimitive() const {
+		switch(m_op) {
+			case FunctionOperator::PLUS:
+				return m_lhs->GetPrimitive() + m_rhs->GetPrimitive();
+			case FunctionOperator::MINUS:
+				return m_lhs->GetPrimitive() - m_rhs->GetPrimitive();
+			case FunctionOperator::TIMES:
+				NOIMP;
+			case FunctionOperator::DIVIDED:
+				NOIMP;
+			case FunctionOperator::POWER:
+				NOIMP;
+			default:
+				throw std::runtime_error("Invalid operator");
+		}
+
+	}
+
+	std::string ComplexFunction::Repr() const {
+		switch(m_op) {
+			case FunctionOperator::PLUS:
+				return m_lhs->Repr() + " + " + m_rhs->Repr();
+			case FunctionOperator::MINUS:
+				return m_lhs->Repr() + " - " + m_rhs->Repr();
+			case FunctionOperator::TIMES:
+				return m_lhs->Repr() + " * " + m_rhs->Repr();
+			case FunctionOperator::DIVIDED:
+				return m_lhs->Repr() + " / " + m_rhs->Repr();
+			case FunctionOperator::POWER:
+				return m_lhs->Repr() + " ^ " + m_rhs->Repr();
+			default:
+				throw std::runtime_error("Invalid operator");
+		}
+	}
+
+	FunctionType ComplexFunction::GetType() const {
+		return FunctionType::COMPLEX;
+	}
+
+	bool ComplexFunction::isZero() const {
+		return m_lhs->isZero() && m_rhs->isZero();
 	}
 }
 
@@ -580,6 +823,11 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
 std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -591,6 +839,27 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
 
 // -
@@ -607,6 +876,11 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
 std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -618,6 +892,27 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
 
 // *
@@ -634,6 +929,11 @@ std::shared_ptr<functools::PolynomialFunction> operator*(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
 std::shared_ptr<functools::PolynomialFunction> operator*(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -645,6 +945,27 @@ std::shared_ptr<functools::PolynomialFunction> operator*(
 std::shared_ptr<functools::PolynomialFunction> operator*(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::PolynomialFunction> operator*(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
 
 // /
@@ -657,11 +978,15 @@ struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::ConstantFunction> rhs
 );
-// Makes no sense
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
 );
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -673,6 +998,27 @@ struct functools::DivisionResult operator/(
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
 
 // ---
@@ -705,6 +1051,17 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 		res
 	);
 }
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+
 std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -772,6 +1129,64 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 	return std::make_shared<functools::PolynomialFunction>(
 		rhsDegree,
 		res
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::TrigonometryFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	std::vector<std::shared_ptr<functools::Function>> res = rhs->GetCoefficients();
+
+	res.back() = std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		res.back()
+	);
+
+	return std::make_shared<PolynomialFunction>(
+		res.size() - 1,
+		res
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
 	);
 }
 
@@ -1007,12 +1422,29 @@ std::shared_ptr<functools::Function> operator+(
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
 			return lhsCast + rhsCast;
 		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast + rhsCast;
+		}
 	}
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
 			return lhsCast + rhsCast;
 		}
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast + rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast + rhsCast;
+		}
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast + rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast + rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
 			return lhsCast + rhsCast;
 		}
 	}
@@ -1030,6 +1462,9 @@ std::shared_ptr<functools::Function> operator+(
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		return lhsCast + rhs;
 	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		return lhsCast + rhs;
+	}
 
 	throw std::runtime_error("Invalid function");
 }
@@ -1045,12 +1480,29 @@ std::shared_ptr<functools::Function> operator-(
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
 			return lhsCast - rhsCast;
 		}
+		if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+			return lhsCast - rhsCast;
+		}
 	}
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
 			return lhsCast - rhsCast;
 		}
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast - rhsCast;
+		}
+		if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+			return lhsCast - rhsCast;
+		}
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast - rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast - rhsCast;
+		}
+		if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
 			return lhsCast - rhsCast;
 		}
 	}
@@ -1068,6 +1520,9 @@ std::shared_ptr<functools::Function> operator-(
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		return lhsCast - rhs;
 	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		return lhsCast - rhs;
+	}
 
 	throw std::runtime_error("Invalid function");
 }
@@ -1083,12 +1538,29 @@ std::shared_ptr<functools::Function> operator*(
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
 			return lhsCast * rhsCast;
 		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
 	}
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
 			return lhsCast * rhsCast;
 		}
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast * rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
 			return lhsCast * rhsCast;
 		}
 	}
@@ -1106,6 +1578,9 @@ std::shared_ptr<functools::Function> operator*(
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		return lhsCast * rhs;
 	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		return lhsCast * rhs;
+	}
 
 	throw std::runtime_error("Invalid function");
 }
@@ -1121,12 +1596,29 @@ struct functools::DivisionResult operator/(
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
 			return lhsCast / rhsCast;
 		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast / rhsCast;
+		}
 	}
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
 			return lhsCast / rhsCast;
 		}
 		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast / rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
+			return lhsCast / rhsCast;
+		}
+	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::ConstantFunction>(rhs)) {
+			return lhsCast / rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(rhs)) {
+			return lhsCast / rhsCast;
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(rhs)) {
 			return lhsCast / rhsCast;
 		}
 	}
@@ -1144,6 +1636,20 @@ struct functools::DivisionResult operator/(
 	if(auto lhsCast = std::dynamic_pointer_cast<functools::PolynomialFunction>(lhs)) {
 		return lhsCast / rhs;
 	}
+	if(auto lhsCast = std::dynamic_pointer_cast<functools::TrigonometryFunction>(lhs)) {
+		return lhsCast / rhs;
+	}
 
 	throw std::runtime_error("Invalid function");
+}
+
+std::shared_ptr<functools::Function> PowerN(
+	std::shared_ptr<functools::Function> func,
+	Type exponent
+) {
+	std::shared_ptr<functools::Function> fn = func;
+	for(Type i = 0; i < exponent; i++) {
+		fn = fn * func;
+	}
+	return fn;
 }

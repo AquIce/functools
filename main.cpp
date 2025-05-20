@@ -24,14 +24,14 @@ int main(int argc, char** argv) {
 	// 	})
 	// );
 
-	// auto func2 = std::make_shared<functools::PolynomialFunction>(
-	// 	1,
-	// 	functools::Upcast<functools::ConstantFunction>(
-	// 		functools::CoeffsToConstFunctions(
-	// 			std::vector<Type>({1, 2})
-	// 		)
-	// 	)
-	// );
+	auto func2 = std::make_shared<functools::PolynomialFunction>(
+		1,
+		functools::Upcast<functools::ConstantFunction>(
+			functools::CoeffsToConstFunctions(
+				std::vector<Type>({1, 2})
+			)
+		)
+	);
 
 	// std::cout << func->Repr() << "\n";
 	// std::cout << func->GetDerivative()->Repr() << "\n";
@@ -43,11 +43,11 @@ int main(int argc, char** argv) {
 
 	auto func = std::make_shared<functools::TrigonometryFunction>(
 		functools::TrigonometryFunctionType::COS,
-		std::make_shared<functools::ConstantFunction>(3 * M_PI)
+		func2
 	);
 
 	std::cout << func->Repr() << "\n";
-	std::cout << func->isZero() << "\n";
+	std::cout << func->GetDerivative()->Repr() << "\n";
 
 	return 0;
 }
