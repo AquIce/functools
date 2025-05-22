@@ -1,7 +1,8 @@
 /*
  * TODO :
- * - Add operators to ComplexFunction (from -)
+ * - Add operators to TrigonometryFunction and ComplexFunction (from TIMES)
  * - Replace PowerN with ComplexFunction
+ * - Add auto simplification to ComplexFunction
  * - Switch general operators to have macro definition (reduces drastically the number of lines)
  * - Add comparison checks to functions (for ComplexFunction::isZero())
 */
@@ -827,6 +828,10 @@ std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
@@ -844,6 +849,10 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
@@ -860,6 +869,31 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 );
 
 // -
@@ -880,6 +914,10 @@ std::shared_ptr<functools::ComplexFunction> operator-(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
@@ -897,6 +935,10 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::ComplexFunction> operator-(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
@@ -913,6 +955,31 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 std::shared_ptr<functools::ComplexFunction> operator-(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 );
 
 // *
@@ -933,6 +1000,10 @@ std::shared_ptr<functools::ComplexFunction> operator*(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::PolynomialFunction> operator*(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
@@ -950,6 +1021,10 @@ std::shared_ptr<functools::PolynomialFunction> operator*(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 std::shared_ptr<functools::ComplexFunction> operator*(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
@@ -966,6 +1041,31 @@ std::shared_ptr<functools::PolynomialFunction> operator*(
 std::shared_ptr<functools::ComplexFunction> operator*(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
+
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	Type rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+std::shared_ptr<functools::ComplexFunction> operator*(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 );
 
 // /
@@ -986,6 +1086,10 @@ struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
@@ -1003,6 +1107,10 @@ struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
 );
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
 
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
@@ -1019,6 +1127,31 @@ struct functools::DivisionResult operator/(
 struct functools::DivisionResult operator/(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+);
+
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	Type rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+);
+struct functools::DivisionResult operator/(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 );
 
 // ---
@@ -1054,6 +1187,16 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::ConstantFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 ) {
 	return std::make_shared<functools::ComplexFunction>(
 		lhs,
@@ -1131,9 +1274,26 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 		res
 	);
 }
-std::shared_ptr<functools::ComplexFunction> operator+(
+std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	std::vector<std::shared_ptr<functools::Function>> res = lhs->GetCoefficients();
+
+	res.back() = std::make_shared<functools::ComplexFunction>(
+		rhs,
+		functools::FunctionOperator::PLUS,
+		res.back()
+	);
+
+	return std::make_shared<PolynomialFunction>(
+		res.size() - 1,
+		res
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 ) {
 	return std::make_shared<functools::ComplexFunction>(
 		lhs,
@@ -1152,7 +1312,7 @@ std::shared_ptr<functools::ComplexFunction> operator+(
 		rhs
 	);
 }
-std::shared_ptr<functools::TrigonometryFunction> operator+(
+std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::ConstantFunction> rhs
 ) {
@@ -1166,22 +1326,74 @@ std::shared_ptr<functools::PolynomialFunction> operator+(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
 ) {
-	std::vector<std::shared_ptr<functools::Function>> res = rhs->GetCoefficients();
-
-	res.back() = std::make_shared<functools::ComplexFunction>(
-		lhs,
-		functools::FunctionOperator::PLUS,
-		res.back()
-	);
-
-	return std::make_shared<PolynomialFunction>(
-		res.size() - 1,
-		res
-	);
+	return rhs + lhs;
 }
 std::shared_ptr<functools::ComplexFunction> operator+(
 	std::shared_ptr<functools::TrigonometryFunction> lhs,
 	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::TrigonometryFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	Type rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::PolynomialFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	// TODO : Add auto simplify because ComplexFunction can have nth-degree behavior
+
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return std::make_shared<functools::ComplexFunction>(
+		lhs,
+		functools::FunctionOperator::PLUS,
+		rhs
+	);
+}
+std::shared_ptr<functools::ComplexFunction> operator+(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 ) {
 	return std::make_shared<functools::ComplexFunction>(
 		lhs,
@@ -1210,6 +1422,19 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 ) {
 	return lhs + rhs * (-1);
 }
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return lhs + (-1) * rhs;
+}
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ConstantFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+) {
+	return lhs + (-1) * rhs;
+}
+
 std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	Type rhs
@@ -1225,6 +1450,49 @@ std::shared_ptr<functools::PolynomialFunction> operator-(
 std::shared_ptr<functools::PolynomialFunction> operator-(
 	std::shared_ptr<functools::PolynomialFunction> lhs,
 	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::PolynomialFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	Type rhs
+) {
+	return lhs + (-rhs);
+}
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ConstantFunction> rhs
+) {
+	return lhs + (-1) * rhs;
+}
+std::shared_ptr<functools::PolynomialFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::PolynomialFunction> rhs
+) {
+	return lhs + (-1) * rhs;
+}
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::TrigonometryFunction> rhs
+) {
+	return lhs + rhs * (-1);
+}
+std::shared_ptr<functools::ComplexFunction> operator-(
+	std::shared_ptr<functools::ComplexFunction> lhs,
+	std::shared_ptr<functools::ComplexFunction> rhs
 ) {
 	return lhs + rhs * (-1);
 }
