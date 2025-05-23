@@ -43,11 +43,21 @@ int main(int argc, char** argv) {
 
 	auto func = std::make_shared<functools::TrigonometryFunction>(
 		functools::TrigonometryFunctionType::COS,
-		func2
+		std::make_shared<functools::PolynomialFunction>(
+			1,
+			functools::Upcast<functools::ConstantFunction>(
+				functools::CoeffsToConstFunctions(
+					std::vector<Type>({1, 0})
+				)
+			)
+		)
 	);
 
-	std::cout << func->Repr() << "\n";
-	std::cout << func->GetDerivative()->Repr() << "\n";
+	std::shared_ptr<functools::PolynomialFunction> func3 = func * func2;
+
+	std::cout << func3->Repr() << "\n";
+	std::cout << func3->GetDerivative() << "\n";
+	std::cout << func3->GetDerivative()->Repr() << "\n";
 
 	return 0;
 }
