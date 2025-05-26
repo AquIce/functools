@@ -1,12 +1,12 @@
 /*
  * TODO :
- * - Add operators to TrigonometryFunction and ComplexFunction (from DIVIDED)
- * - Replace PowerN with ComplexFunction
  * - Add auto simplification to ComplexFunction
+ * - Replace PowerN with ComplexFunction
  * - Switch general operators to have macro definition (reduces drastically the number of lines)
  * - Add comparison checks to functions (for ComplexFunction::isZero())
  * - Replace "makes no sense until 1/x" with ComplexFunction(1, DIVIDED, ...)
  * - Move operators logic to ComplexFunction (all operators only create a ComplexFunction)
+ * - Add primitives to trigonometric functions
 */
 
 #pragma once
@@ -397,19 +397,22 @@ namespace functools {
 		return result;
 	}
 
-	// Add inner derivative
 	std::shared_ptr<Function> PolynomialFunction::GetDerivative() const {
-		auto derivative = std::make_shared<PolynomialFunction>();
+		auto derivative = std::make_shared<ComplexFunction>(
+			std::make_shared<ConstantFunction>(0),
+			FunctionOperator::PLUS,
+			std::make_shared<ConstantFunction>(0)
+		);
 
 		for(DegreeType i = 0; i < m_degree; i++) {
 			if(auto coefficientCast = std::dynamic_pointer_cast<ConstantFunction>(m_coefficients.at(i))) {
-				derivative = std::dynamic_pointer_cast<PolynomialFunction>(
+				derivative = std::dynamic_pointer_cast<ComplexFunction>(
 					derivative + (m_coefficients.at(i) * (m_degree - i) * XPowerN(m_degree - i - 1))
 				);
 				continue;
 			}
 
-			derivative = std::dynamic_pointer_cast<PolynomialFunction>(
+			derivative = std::dynamic_pointer_cast<ComplexFunction>(
 				derivative + (
 					(XPowerN(m_degree - i) * m_coefficients.at(i)->GetDerivative()) +
 					(XPowerN(m_degree - i - 1) * m_coefficients.at(i))
@@ -746,16 +749,12 @@ namespace functools {
 	}
 
 	std::shared_ptr<Function> ComplexFunction::GetDerivative() const {
-		LOG((int)m_op);
 		switch(m_op) {
 			case FunctionOperator::PLUS:
 				return m_lhs->GetDerivative() + m_rhs->GetDerivative();
 			case FunctionOperator::MINUS:
 				return m_lhs->GetDerivative() - m_rhs->GetDerivative();
 			case FunctionOperator::TIMES:
-				// Why is m_lhs 0 here ?
-				LOG(m_lhs->GetDerivative()->Repr());
-				LOG(m_rhs->GetDerivative()->Repr());
 				return m_lhs->GetDerivative() * m_rhs + m_rhs->GetDerivative() * m_lhs;
 			case FunctionOperator::DIVIDED:
 				return m_lhs->GetDerivative() * m_rhs - m_rhs->GetDerivative() * m_lhs;
@@ -789,15 +788,15 @@ namespace functools {
 	std::string ComplexFunction::Repr() const {
 		switch(m_op) {
 			case FunctionOperator::PLUS:
-				return m_lhs->Repr() + " + " + m_rhs->Repr();
+				return std::string("(") + m_lhs->Repr() + ") + (" + m_rhs->Repr() + ")";
 			case FunctionOperator::MINUS:
-				return m_lhs->Repr() + " - " + m_rhs->Repr();
+				return std::string("(") + m_lhs->Repr() + ") - (" + m_rhs->Repr() + ")";
 			case FunctionOperator::TIMES:
-				return m_lhs->Repr() + " * " + m_rhs->Repr();
+				return std::string("(") + m_lhs->Repr() + ") * (" + m_rhs->Repr() + ")";
 			case FunctionOperator::DIVIDED:
-				return m_lhs->Repr() + " / " + m_rhs->Repr();
+				return std::string("(") + m_lhs->Repr() + ") / (" + m_rhs->Repr() + ")";
 			case FunctionOperator::POWER:
-				return m_lhs->Repr() + " ^ " + m_rhs->Repr();
+				return std::string("(") + m_lhs->Repr() + ") ^ (" + m_rhs->Repr() + ")";
 			default:
 				throw std::runtime_error("Invalid operator");
 		}
