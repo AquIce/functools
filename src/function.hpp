@@ -7,6 +7,11 @@
  * - Replace "makes no sense until 1/x" with ComplexFunction(1, DIVIDED, ...)
  * - Move operators logic to ComplexFunction (all operators only create a ComplexFunction)
  * - Add primitives to trigonometric functions
+ * - Add primitives that need by part integration
+ * - Add log_{n} functions
+ * - Add exponential functions
+ * - Add sgn function
+ * - Add abs function
 */
 
 #pragma once
@@ -770,7 +775,7 @@ namespace functools {
 			case FunctionOperator::TIMES: {
 				auto a = m_lhs->GetDerivative() * m_rhs;
 				auto b = m_rhs->GetDerivative() * m_lhs;
-				
+
 				return m_lhs->GetDerivative() * m_rhs + m_rhs->GetDerivative() * m_lhs;
 			}
 			case FunctionOperator::DIVIDED:
