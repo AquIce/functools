@@ -278,6 +278,16 @@ namespace functools {
 	}
 
 	std::shared_ptr<PolynomialFunction> XPowerN(Type n) {
+
+		if(n == -1) {
+			return std::make_shared<PolynomialFunction>(
+				0,
+				std::vector<std::shared_ptr<Function>>({
+					std::make_shared<ConstantFunction>(0)
+				})
+			);
+		}
+
 		auto res = std::vector<std::shared_ptr<Function>>(
 			n + 1,
 			std::dynamic_pointer_cast<Function>(
@@ -287,6 +297,7 @@ namespace functools {
 		res.at(0) = std::dynamic_pointer_cast<Function>(
 			std::make_shared<ConstantFunction>(1)
 		);
+
 		return std::make_shared<PolynomialFunction>(n, res);
  	}
 
@@ -371,7 +382,9 @@ namespace functools {
 		m_coefficients(coefficients)
 	{
 		if(m_degree != m_coefficients.size() - 1) {
-			throw std::runtime_error("Invalid polynomial degree.");
+			throw std::runtime_error(
+				std::string("Invalid polynomial degree ") + std::to_string(m_degree) + " and " + std::to_string(m_coefficients.size())
+			);
 		}
 	}
 
@@ -404,7 +417,7 @@ namespace functools {
 			std::make_shared<ConstantFunction>(0)
 		);
 
-		for(DegreeType i = 0; i < m_degree; i++) {
+		for(DegreeType i = 0; i < m_degree + 1; i++) {
 			if(auto coefficientCast = std::dynamic_pointer_cast<ConstantFunction>(m_coefficients.at(i))) {
 				derivative = std::dynamic_pointer_cast<ComplexFunction>(
 					derivative + (m_coefficients.at(i) * (m_degree - i) * XPowerN(m_degree - i - 1))
@@ -754,8 +767,12 @@ namespace functools {
 				return m_lhs->GetDerivative() + m_rhs->GetDerivative();
 			case FunctionOperator::MINUS:
 				return m_lhs->GetDerivative() - m_rhs->GetDerivative();
-			case FunctionOperator::TIMES:
+			case FunctionOperator::TIMES: {
+				auto a = m_lhs->GetDerivative() * m_rhs;
+				auto b = m_rhs->GetDerivative() * m_lhs;
+				
 				return m_lhs->GetDerivative() * m_rhs + m_rhs->GetDerivative() * m_lhs;
+			}
 			case FunctionOperator::DIVIDED:
 				return m_lhs->GetDerivative() * m_rhs - m_rhs->GetDerivative() * m_lhs;
 			case FunctionOperator::POWER:
