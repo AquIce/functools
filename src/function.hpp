@@ -12,6 +12,7 @@
  * - Add exponential functions
  * - Add sgn function
  * - Add abs function
+ * - Add static evaluation to any function containing only ConstantFunctions
 */
 
 #pragma once
@@ -81,6 +82,7 @@ namespace functools {
 
 		virtual FunctionType GetType() const;
 		virtual bool isZero() const = 0;
+		virtual bool needsParentheses() const = 0;
 	};
 
 	class ConstantFunction : public Function {
@@ -98,6 +100,8 @@ namespace functools {
 		FunctionType GetType() const override;
 
 		bool isZero() const override;
+
+		bool needsParentheses() const override;
 
 		Type GetValue();
 
@@ -127,6 +131,8 @@ namespace functools {
 		FunctionType GetType() const override;
 
 		bool isZero() const override;
+
+		bool needsParentheses() const override;
 
 		DegreeType GetDegree();
 
@@ -158,6 +164,8 @@ namespace functools {
 
 		bool isZero() const override;
 
+		bool needsParentheses() const override;
+
 	private:
 		TrigonometryFunctionType m_type;
 		std::shared_ptr<Function> m_inner;
@@ -184,6 +192,10 @@ namespace functools {
 		FunctionType GetType() const override;
 
 		bool isZero() const override;
+
+		bool needsParentheses() const override;
+
+		std::shared_ptr<Function> Simplify();
 
 	private:
 		std::shared_ptr<Function> m_lhs;		
@@ -370,6 +382,10 @@ namespace functools {
 		return m_value == 0;
 	}
 
+	bool ConstantFunction::needsParentheses() const {
+		return false;
+	}
+
 	Type ConstantFunction::GetValue() {
 		return m_value;
 	}
@@ -476,6 +492,27 @@ namespace functools {
 		DegreeType currentDegree = m_degree;
 		for(const auto& coefficient : m_coefficients) {
 
+			if(coefficient->isZero()) {
+				continue;
+			}
+			std::string coeffRepr = coefficient->Repr();
+			if(coeffRepr == "") {
+				throw std::runtime_error("err");
+			} 
+
+			if(auto coeffCast = std::dynamic_pointer_cast<ConstantFunction>(coefficient)) {
+				if(coeffCast->GetValue() == 1) {
+					coeffRepr = "";
+				}
+				else if(coeffCast->GetValue() == -1) {
+					coeffRepr = "-";
+				}
+			}
+
+			if(coefficient->needsParentheses()) {
+				coeffRepr = std::string("(") + coeffRepr + ") ";
+			}
+
 			std::string xForm = "x^" + std::to_string(currentDegree);
 			
 			if(currentDegree == 0) {
@@ -486,7 +523,7 @@ namespace functools {
 
 			repr +=
 				std::string(currentDegree != m_degree ? "+ " : "")
-				+ "(" + coefficient->Repr() + ") " + xForm
+				+ coeffRepr + xForm
 				+ std::string(currentDegree != 0 ? " " : ""); 
 
 			currentDegree--;
@@ -505,6 +542,10 @@ namespace functools {
 				return false;
 			}
 		}
+		return true;
+	}
+
+	bool PolynomialFunction::needsParentheses() const {
 		return true;
 	}
 
@@ -735,6 +776,10 @@ namespace functools {
 		return false;
 	}
 
+	bool TrigonometryFunction::needsParentheses() const {
+		return false;
+	}
+
 	// --- 
 	// Complex Functions
 	// ---
@@ -747,7 +792,21 @@ namespace functools {
 		m_lhs(lhs),
 		m_op(op),
 		m_rhs(rhs)
-	{}
+	{
+		if(m_op == FunctionOperator::DIVIDED && m_rhs->isZero()) {
+			throw std::runtime_error("Division by zero"); 
+		}
+		if(auto lhsCast = std::dynamic_pointer_cast<ComplexFunction>(m_lhs)) {
+			if(auto lhsSimplified = lhsCast->Simplify()) {
+				m_lhs = lhsSimplified;
+			}
+		}
+		if(auto rhsCast = std::dynamic_pointer_cast<ComplexFunction>(m_rhs)) {
+			if(auto rhsSimplified = rhsCast->Simplify()) {
+				m_rhs = rhsSimplified;
+			}
+		}
+	}
 
 	Type ComplexFunction::Evaluate(Type x) {
 		switch(m_op) {
@@ -808,17 +867,24 @@ namespace functools {
 	}
 
 	std::string ComplexFunction::Repr() const {
+		std::string lhsRepr = m_lhs->needsParentheses() ?
+			(std::string("(") + m_lhs->Repr() + ")") :
+			m_lhs->Repr();
+		std::string rhsRepr = m_rhs->needsParentheses() ?
+			(std::string("(") + m_rhs->Repr() + ")") :
+			m_rhs->Repr();
+
 		switch(m_op) {
 			case FunctionOperator::PLUS:
-				return std::string("(") + m_lhs->Repr() + ") + (" + m_rhs->Repr() + ")";
+				return lhsRepr + " + " + rhsRepr;
 			case FunctionOperator::MINUS:
-				return std::string("(") + m_lhs->Repr() + ") - (" + m_rhs->Repr() + ")";
+				return lhsRepr + " - " + rhsRepr;
 			case FunctionOperator::TIMES:
-				return std::string("(") + m_lhs->Repr() + ") * (" + m_rhs->Repr() + ")";
+				return lhsRepr + " * " + rhsRepr;
 			case FunctionOperator::DIVIDED:
-				return std::string("(") + m_lhs->Repr() + ") / (" + m_rhs->Repr() + ")";
+				return lhsRepr + " / " + rhsRepr;
 			case FunctionOperator::POWER:
-				return std::string("(") + m_lhs->Repr() + ") ^ (" + m_rhs->Repr() + ")";
+				return lhsRepr + " ^ " + rhsRepr;
 			default:
 				throw std::runtime_error("Invalid operator");
 		}
@@ -830,6 +896,81 @@ namespace functools {
 
 	bool ComplexFunction::isZero() const {
 		return m_lhs->isZero() && m_rhs->isZero();
+	}
+
+	bool ComplexFunction::needsParentheses() const {
+		return false;
+	}
+
+	std::shared_ptr<Function> ComplexFunction::Simplify() {
+		switch(m_op) {
+			case FunctionOperator::PLUS: {
+				if(m_lhs->isZero()) {
+					return m_rhs;
+				}
+				if(m_rhs->isZero()) {
+					return m_lhs;
+				}
+				break;
+			}
+			case FunctionOperator::MINUS: {
+				if(m_lhs->isZero()) {
+					return m_rhs * (-1);
+				}
+				if(m_rhs->isZero()) {
+					return m_lhs;
+				}
+				break;
+			}
+			case FunctionOperator::TIMES: {
+				if(m_lhs->isZero() || m_rhs->isZero()) {
+					return std::make_shared<ConstantFunction>(0);
+				}
+				if(auto lhsCast = std::dynamic_pointer_cast<ConstantFunction>(m_lhs)) {
+					if(lhsCast->GetValue() == 1) {
+						return m_rhs;
+					}
+				}
+				if(auto rhsCast = std::dynamic_pointer_cast<ConstantFunction>(m_lhs)) {
+					if(rhsCast->GetValue() == 1) {
+						return m_lhs;
+					}
+				}
+				break;
+			}
+			case FunctionOperator::DIVIDED: {
+				if(m_lhs->isZero()) {
+					return std::make_shared<ConstantFunction>(0);
+				}
+				if(auto rhsCast = std::dynamic_pointer_cast<ConstantFunction>(m_lhs)) {
+					if(rhsCast->GetValue() == 1) {
+						return m_lhs;
+					}
+				}
+				break;
+			}
+			case FunctionOperator::POWER: {
+				if(m_lhs->isZero()) {
+					return std::make_shared<ConstantFunction>(0);
+				}
+				if(m_rhs->isZero()) {
+					return std::make_shared<ConstantFunction>(1);
+				}
+				if(auto lhsCast = std::dynamic_pointer_cast<ConstantFunction>(m_lhs)) {
+					if(lhsCast->GetValue() == 1) {
+						return std::make_shared<ConstantFunction>(1);
+					}
+				}
+				if(auto rhsCast = std::dynamic_pointer_cast<ConstantFunction>(m_lhs)) {
+					if(rhsCast->GetValue() == 1) {
+						return m_lhs;
+					}
+				}
+				break;
+			}
+		}
+
+		return nullptr;
 	}
 }
 
