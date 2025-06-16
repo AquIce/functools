@@ -1,7 +1,6 @@
 /*
  * TODO :
  * - Add auto simplification to (...) * (...)^2
- * - Replace PowerN with ComplexFunction
  * - Switch general operators to have macro definition (reduces drastically the number of lines)
  * - Add comparison checks to functions (for ComplexFunction::isZero())
  * - Move operators logic to ComplexFunction (all operators only create a ComplexFunction)
@@ -224,11 +223,6 @@ std::shared_ptr<functools::Function> operator/(
 	Type rhs
 );
 
-std::shared_ptr<functools::Function> PowerN(
-	std::shared_ptr<functools::Function> func,
-	Type exponent
-);
-
 #include "binds.hpp"
 
 namespace functools {
@@ -404,118 +398,122 @@ namespace functools {
 		switch(m_type) {
 			case TrigonometryFunctionType::SIN: {
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::COS,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::COS,
 						m_inner
 					) * m_inner->GetDerivative()
 				);
 			}
 			case TrigonometryFunctionType::CSC: {
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::CSC,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::CSC,
 						m_inner
-					) * std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::COT,
+					) * std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::COT,
 						m_inner
 					) * m_inner->GetDerivative() * (-1)
 				);
 			}
 			case TrigonometryFunctionType::COS: {
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::SIN,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::SIN,
 						m_inner
 					) * m_inner->GetDerivative() * (-1)
 				);
 			}
 			case TrigonometryFunctionType::SEC: {
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::SEC,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::SEC,
 						m_inner
-					) * std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::TAN,
+					) * std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::TAN,
 						m_inner
 					) * m_inner->GetDerivative()
 				);
 			}
 			case TrigonometryFunctionType::TAN: {
 				return (
-					PowerN(
-						std::make_shared<functools::TrigonometryFunction>(
-							functools::TrigonometryFunctionType::SEC,
+					std::make_shared<ComplexFunction>(
+						std::make_shared<TrigonometryFunction>(
+							TrigonometryFunctionType::SEC,
 							m_inner
 						),
-						2
+						FunctionOperator::POWER,
+						std::make_shared<ConstantFunction>(2)
 					) * m_inner->GetDerivative()
 				);
 			}
 			case TrigonometryFunctionType::COT: {
 				return (
-					PowerN(
-						std::make_shared<functools::TrigonometryFunction>(
-							functools::TrigonometryFunctionType::CSC,
+					std::make_shared<ComplexFunction>(
+						std::make_shared<TrigonometryFunction>(
+							TrigonometryFunctionType::CSC,
 							m_inner
 						),
-						2
+						FunctionOperator::POWER,
+						std::make_shared<ConstantFunction>(2)
 					) * m_inner->GetDerivative() * (-1)
 				);
 			}
 			case TrigonometryFunctionType::SINH:
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::COSH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::COSH,
 						m_inner
 					) * m_inner->GetDerivative()
 				);
 			case TrigonometryFunctionType::CSCH:
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::CSCH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::CSCH,
 						m_inner
 					) *
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::TANH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::TANH,
 						m_inner
 					) * m_inner->GetDerivative() * (-1)
 				);
 			case TrigonometryFunctionType::COSH:
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::SINH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::SINH,
 						m_inner
 					) * m_inner->GetDerivative()
 				);
 			case TrigonometryFunctionType::SECH:
 				return (
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::SECH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::SECH,
 						m_inner
 					) *
-					std::make_shared<functools::TrigonometryFunction>(
-						functools::TrigonometryFunctionType::TANH,
+					std::make_shared<TrigonometryFunction>(
+						TrigonometryFunctionType::TANH,
 						m_inner
 					) * m_inner->GetDerivative() * (-1)
 				);
 			case TrigonometryFunctionType::TANH:
 				return (
-					PowerN(
-						std::make_shared<functools::TrigonometryFunction>(
-							functools::TrigonometryFunctionType::SECH,
+					std::make_shared<ComplexFunction>(
+						std::make_shared<TrigonometryFunction>(
+							TrigonometryFunctionType::SECH,
 							m_inner
 						),
-						2
+						FunctionOperator::POWER,
+						std::make_shared<ConstantFunction>(2)
 					) * m_inner->GetDerivative()
 				);
 			case TrigonometryFunctionType::COTH:
 				return (
-					PowerN(
-						std::make_shared<functools::TrigonometryFunction>(
-							functools::TrigonometryFunctionType::COSH,
+					std::make_shared<ComplexFunction>(
+						std::make_shared<TrigonometryFunction>(
+							TrigonometryFunctionType::COSH,
 							m_inner
 						),
-						2
+						FunctionOperator::POWER,
+						std::make_shared<ConstantFunction>(2)
 					) * m_inner->GetDerivative() * (-1)
 				);
 			default:
@@ -707,6 +705,7 @@ namespace functools {
 		FunctionOperator op
 	) {
 		// See TODO
+		return nullptr;
 	}
 
 	std::shared_ptr<Function> ComplexFunction::Simplify() {
@@ -2157,15 +2156,4 @@ std::shared_ptr<functools::Function> operator/(
 	}
 
 	throw std::runtime_error("Invalid function");
-}
-
-std::shared_ptr<functools::Function> PowerN(
-	std::shared_ptr<functools::Function> func,
-	Type exponent
-) {
-	std::shared_ptr<functools::Function> fn = func;
-	for(Type i = 0; i < exponent; i++) {
-		fn = fn * func;
-	}
-	return fn;
 }
