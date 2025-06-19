@@ -6,11 +6,10 @@
  * - Move operators logic to ComplexFunction (all operators only create a ComplexFunction)
  * - Add primitives to trigonometric functions
  * - Add primitives that need by part integration
- * - Add log_{n} functions
- * - Add exponential functions
  * - Add sgn function
  * - Add abs function
  * - Add static evaluation to any function containing only ConstantFunctions
+ * - Add interval functions
 */
 
 #pragma once
@@ -36,7 +35,8 @@ namespace functools {
 		CONSTANT,
 		IDENTITY,
 		TRIGONOMETRY,
-		COMPLEX
+		COMPLEX,
+		LOGARITHM
 	};
 
 	enum class FunctionOperator {
@@ -180,6 +180,32 @@ namespace functools {
 		std::shared_ptr<Function> m_lhs;		
 		FunctionOperator m_op;		
 		std::shared_ptr<Function> m_rhs;
+	};
+
+	class LogarithmFunction : public Function {
+
+	public:
+
+		LogarithmFunction(
+			std::shared_ptr<Function> base,
+			std::shared_ptr<Function> inner
+		);
+
+		Type Evaluate(Type x) override;
+
+		std::shared_ptr<Function> GetDerivative() const override;
+		std::shared_ptr<Function> GetPrimitive() const override;
+
+
+		std::string Repr() const override;
+
+		FunctionType GetType() const override;
+		bool isZero() const override;
+		bool needsParentheses() const override;
+
+	private:
+		std::shared_ptr<Function> m_base;		
+		std::shared_ptr<Function> m_inner;
 	};
 }
 
@@ -797,6 +823,77 @@ namespace functools {
 		}
 
 		return nullptr;
+	}
+
+	// --- 
+	// Logarithm Functions
+	// ---
+	
+	LogarithmFunction::LogarithmFunction(
+		std::shared_ptr<Function> base,
+		std::shared_ptr<Function> inner
+	) :
+		m_base(base),
+		m_inner(inner)
+	{
+		if(m_base->isZero()) {
+			throw std::runtime_error("Logarithm of base 0"); 
+		}
+		if(m_inner->isZero()) {
+			throw std::runtime_error("Logarithm of inner value 0");
+		}
+	}
+
+	Type LogarithmFunction::Evaluate(Type x) {
+		Type baseValue = m_base->Evaluate(x);
+		Type innerValue = m_inner->Evaluate(x);
+		
+		if(baseValue == 0) {
+			throw std::runtime_error("Logarithm of base 0");
+		}
+		if(innerValue == 0) {
+			throw std::runtime_error("Logarithm of inner value 0");
+		}
+		if(baseValue == 1 && innerValue != 1) {
+			throw std::runtime_error("Logarithm of base 1 with inner value 1");
+		}
+		return std::log(innerValue) / std::log(baseValue);
+	}
+
+	std::shared_ptr<Function> LogarithmFunction::GetDerivative() const {
+		return std::make_shared<ComplexFunction>(
+			std::make_shared<ComplexFunction>(
+				std::make_shared<ConstantFunction>(1),
+				FunctionOperator::DIVIDED,
+				m_base
+			),
+			FunctionOperator::TIMES,
+			m_base->GetDerivative()
+		);
+	}
+
+	std::shared_ptr<Function> LogarithmFunction::GetPrimitive() const {
+		// Use integration by parts
+		return nullptr;
+	}
+
+	std::string LogarithmFunction::Repr() const {
+		std::string baseRepr = std::string("_{") + m_base->Repr() + "}";
+		std::string innerRepr = std::string("(") + m_inner->Repr() + ")";
+
+		return std::string("log") + baseRepr + innerRepr;
+	}
+
+	FunctionType LogarithmFunction::GetType() const {
+		return FunctionType::LOGARITHM;
+	}
+
+	bool LogarithmFunction::isZero() const {
+		return false;
+	}
+
+	bool LogarithmFunction::needsParentheses() const {
+		return false;
 	}
 }
 

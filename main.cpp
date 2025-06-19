@@ -107,11 +107,15 @@ int main(int argc, char** argv) {
 	);
 
 	std::shared_ptr<functools::ComplexFunction> func3 = func * func2;
+	auto func4 = std::make_shared<functools::LogarithmFunction>(
+		std::make_shared<functools::ConstantFunction>(std::exp(1)),
+		func3
+	);
 
-	auto fprime = func3->GetDerivative();
+	auto fprime = func4->GetDerivative();
 
 	LOG("f");
-	LOG(func3->Repr());
+	LOG(func4->Repr());
 	LOG("f'");
 	LOG(fprime->Repr());
 
